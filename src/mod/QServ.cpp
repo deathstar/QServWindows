@@ -30,69 +30,37 @@ namespace server {
     }
     
     bool sendnearstatement = false;
-    bool no_geoip_lookup = false;
-    char *QServ::congeoip(const char *ip) {
-		return (char*)GeoIP_country_name_by_name(m_geoip, ip);
-    }
-    
+    bool is_unknown_ip = false;
+    bool geoip_record_copied = false;
     std::string QServ::cgip(const char *ip)  {
-    	
+        
         std::stringstream gipi;
-        
-        char delimiter[] = ", ";
-        char unknown[] = "Unknown";
+        const char delimiter[] = ", ";
         GeoIPRecord *gipr = GeoIP_record_by_addr(city_geoip, ip);
-        
-        //city, region, and country (omit region numbers)
-        if(gipr->city != NULL && gipr->region != NULL && gipr->country_name != NULL && isalpha(*gipr->region)) {
-        	gipi << gipr->city << delimiter << gipr->region << delimiter << gipr->country_name;
-            sendnearstatement = true;
+        if(gipr) {
+            if(gipr->city != NULL && gipr->region != NULL && isalpha(*gipr->region) && gipr->country_name != NULL) {
+                gipi << gipr->city << delimiter << gipr->region << delimiter << gipr->country_name;
+                sendnearstatement = true;
+            }
+            else if(gipr->city != NULL && gipr->country_name != NULL) {
+                gipi << gipr->city << delimiter << gipr->country_name;
+                sendnearstatement = true;
+            }
+            else if(gipr->city != NULL) {
+                gipi << gipr->city;
+                sendnearstatement = true;
+            }
+            else if(gipr->country_name != NULL) {
+                gipi << gipr->country_name;
+                sendnearstatement = false;
+            }
         }
-        
-        //city only
-        else if(gipr->country_name == NULL && gipr->region == NULL && gipr->city != NULL) {
-            gipi << gipr->city;
-            sendnearstatement = true;
-        }
-        
-        //country name only
-        else if(gipr->city == NULL || (gipr->region == NULL && gipr->country_name != NULL)) {
-        	gipi << gipr->country_name;
-            sendnearstatement = false;
-        }
-        
-        //omit region numbers, get city and country if possible
-        else if(!isalpha(*gipr->region) && gipr->city != NULL && gipr->country_name != NULL) {
-            gipi << gipr->city << delimiter << gipr->country_name;
-            sendnearstatement = true;
-        }
-        
-        //omit region numbers, get country
-        else if(!isalpha(*gipr->region) && gipr->country_name != NULL && gipr->city == NULL) {
-            gipi << gipr->country_name;
-            sendnearstatement = false;
-        }
-        
-        //omit region numbers, get city
-        else if(!isalpha(*gipr->region) && gipr->country_name == NULL && gipr->city != NULL) {
-            gipi << gipr->city;
-            sendnearstatement = true;
-        }
-        
-        //unknown location
         else {
-        	gipi << unknown;
-            sendnearstatement = false;
-            no_geoip_lookup = true;
+            gipi << "unknown location";
+            is_unknown_ip = true;
         }
-        
         return gipi.str();
-        
-        //cleanup
-        if(gipr) GeoIPRecord_delete(gipr);
-        if(gipr->city != NULL) gipr->city=0;
-        if(gipr->region != NULL) gipr->region=0;
-        if(gipr->country_name != NULL) gipr->country_name=0;
+        if(gipr && geoip_record_copied) GeoIPRecord_delete(gipr); //don't clear until copied
     }
     
     void QServ::newcommand(const char *name, const char *desc, int priv, void (*callback)(int, char **args, int),
@@ -384,11 +352,26 @@ namespace server {
     
     void QServ::getLocation(clientinfo *ci) {
         
-        char buf[64];
         char *ip = toip(ci->clientnum);
         const char *location;
 
-        if(!strcmp(ip,"127.0.0.1") || !strcmp(buf, ip) || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) location = (char*)"localhost";
+	 /* 
+	 TODO: Add windows support for internal ip address range check
+	 
+	 10.0.0.0 ip address ranges are not checked with isPartOf and could cause a crash
+	 if the host connects to the server from the localhost server on the list. 
+	 This range is excluded because it can conflict with external ip addresses in
+	 the 10.0.0.0 range. This is kind of a big problem considering windows doesn't 
+	 have the other code which compares the internal ip (buf) to the connector ip.
+	 The internal ip address ranges are excluded because geoip obviously cannot
+	 find data for interal ip addresses' only externals
+	 
+	 Excluded localhost ip ranges
+         10.0.0.0 - 10.255.255.255 (10/8 prefix) *IGNORED*
+         172.16.0.0 - 172.31.255.255 (172.16/12 prefix)
+         192.168.0.0 - 192.168.255.255 (192.168/16 prefix)
+        */
+        if(!strcmp(ip,"127.0.0.1") || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) location = (char*)"localhost";
         else location = cgip(ip).c_str();
         
         //format message for console/irc and server
@@ -411,12 +394,12 @@ namespace server {
         if(strlen(ip) > 2) {
             
             //unknown geoip lookup
-            if(no_geoip_lookup) {
+            if(!strcmp("(null)", location) || is_unknown_ip) {
                 type = 0;
                 typeconsole = 0;
                 
             //localhost exclusion
-            } else if(!strcmp(ip,"127.0.0.1") || !strcmp(buf, ip) || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) {
+            } else if(!strcmp(ip,"127.0.0.1") || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) {
                 type = 1;
                 typeconsole = 1;
                 
@@ -433,6 +416,7 @@ namespace server {
             defformatstring(nocolormsg)("%s%s", ci->name, (typeconsole < 2) ? typesconsole[typeconsole] : pmsg);
             out(ECHO_SERV,"%s",msg);
             out(ECHO_NOCOLOR, "%s",nocolormsg);
+            geoip_record_copied = true;
         }
     }
 

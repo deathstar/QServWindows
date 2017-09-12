@@ -28,6 +28,10 @@ namespace server {
         if(city_geoip == NULL) return false;
         return true;
     }
+	
+    char *QServ::congeoip(const char *ip) {
+        return (char*)GeoIP_country_name_by_name(m_geoip, ip);
+    }
     
     bool sendnearstatement = false;
     bool is_unknown_ip = false;

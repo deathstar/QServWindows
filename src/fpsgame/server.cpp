@@ -97,6 +97,7 @@ namespace server {
     }
     
     //QServ
+    bool firstblood;
     bool enableautosendmap = true;
     bool q_teammode = false;
     bool persist = false;
@@ -2155,6 +2156,7 @@ namespace server {
         pausegame(false);
         changegamespeed(defaultgamespeed);
         if(smode) smode->cleanup();
+        firstblood = false;
         aiman::clearai();
         gamemode = mode;
         gamemillis = 0;
@@ -2235,7 +2237,6 @@ namespace server {
         maprotation &rot = maprotations[curmaprotation];
         changemap(rot.map, rot.findmode(gamemode));
     }
-    bool firstblood = false;
     
     struct votecount
     {
@@ -2331,7 +2332,7 @@ namespace server {
 best.setsize(0); \
 best.add(clients[0]); \
 besti = best[0]->state.stat; \
-for(int i = 1; i < clients.length(); i++) if(!clients[i]->_xi.spy) \
+for(int i = 1; i < clients.length(); i++) \
 { \
 if(clients[i]->state.stat > besti) \
 { \
@@ -2427,7 +2428,7 @@ best.add(clients[i]); \
         best.setsize(0);
         best.add(clients[0]);
         besti = best[0]->state.damage * 100 / max(best[0]->state.shotdamage, 1);
-        for(int i = 1; i < clients.length(); i++) if(!clients[i]->_xi.spy)
+        for(int i = 1; i < clients.length(); i++) 
         {
             int curri = clients[i]->state.damage * 100 / max(clients[i]->state.shotdamage, 1);
             if(curri > besti)
@@ -2495,7 +2496,7 @@ best.add(clients[i]); \
         best.setsize(0);
         best.add(clients[0]);
         besti = best[0]->state.shotdamage-best[0]->state.damage;
-        for(int i = 1; i < clients.length(); i++) if(!clients[i]->_xi.spy)
+        for(int i = 1; i < clients.length(); i++) 
         {
             int curri = clients[i]->state.shotdamage-clients[i]->state.damage;
             if(curri > besti)

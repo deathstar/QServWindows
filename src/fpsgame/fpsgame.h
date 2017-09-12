@@ -214,9 +214,7 @@ namespace server {
     
     struct extrainfo
     {
-        bool spy;
         int lasttakeflag;
-
     };
     
     struct clientinfo

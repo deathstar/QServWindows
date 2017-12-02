@@ -20,7 +20,7 @@ namespace server {
         ncommand("whois", "\f7View information about a player. Usage: #whois <cn>", PRIV_NONE, whois_cmd, 1);
         ncommand("time", "\f7View the current time. Usage: #time <UTC Offset Number>", PRIV_MASTER, time_cmd, 1);
         ncommand("pm", "\f7Send a private message to someone. Usage #pm <cn> <private message>", PRIV_NONE, pm_cmd,2);
-        ncommand("callops", "\f7Call all operators on the Internet Relay Chat Server. Usage: #callops", PRIV_NONE, callops_cmd, 0);
+        ncommand("callops", "\f7Call and notify all server operators. Usage: #callops", PRIV_NONE, callops_cmd, 0);
         ncommand("mapsucks", "\f7Votes for an intermission to change the map. Usage: #mapsucks", PRIV_NONE, mapsucks_cmd, 0);
         ncommand("forgive", "\f7Forgive a player for teamkilling or just in general. Usage: #forgive <cn>", PRIV_NONE, forgive_cmd, 1);
         ncommand("intermission", "\f7Force an intermission. Usage: #intermission", PRIV_MASTER, forceintermission_cmd, 0);
@@ -995,16 +995,37 @@ namespace server {
             sendf(CMD_SENDER, 1, "ris", N_SERVMSG, msg);
         }
     }
-    
-	VAR(ircignore, 0, 0, 1);
-	SVAR(contactemail, "");
+	
+    VAR(ircignore, 0, 0, 1);
+    SVAR(contactemail, "");
     QSERV_CALLBACK callops_cmd(p) {
+    	//IRC enabled, notify irc-operators/masters/admins
     	if(!getvar("ircignore")) {
     		out(ECHO_IRC, "[Attention operator(s)]: %s: %s is in need of assistance.", ircoperators, CMD_SCI.name); 
-    		defformatstring(toclient)("You alerted operator(s) %s", ircoperators); 
+    		defformatstring(toclient)("You alerted IRC operator(s): %s", ircoperators); 
     		sendf(CMD_SENDER, 1, "ris", N_SERVMSG, toclient);
+    		loopv(clients) {
+        		clientinfo *ci = clients[i];
+        		defformatstring(s)("\f6[Attention]: %s, %s is in need of assistance.", colorname(ci), CMD_SCI.name); 
+        		if((ci->privilege == PRIV_ADMIN || ci->privilege == PRIV_MASTER) && ci->connected && ci->clientnum != CMD_SENDER) sendf(ci->clientnum, 1, "ris", N_SERVMSG, s);
+        	}
         }
-        else {defformatstring(operatorunavailable)("\f7Sorry, No operators are available currently. \nEmail: \f1%s \f7for more assistance.",contactemail); sendf(CMD_SENDER, 1, "ris", N_SERVMSG, operatorunavailable);}
+        //IRC disabled, echo to console and notify masters/admins
+        else if(getvar("ircignore")) {
+        	defformatstring(toclient)("\f7Admins have been notified. \nEmail: \f1%s \f7for more assistance.",contactemail); 
+        	sendf(CMD_SENDER, 1, "ris", N_SERVMSG, toclient);
+        	out(ECHO_CONSOLE, "[Attention operator(s)]: %s: %s is in need of assistance.", ircoperators, CMD_SCI.name); 
+        	loopv(clients) {
+        		clientinfo *ci = clients[i];
+        		defformatstring(s)("\f6[Attention]: %s, %s is in need of assistance.", colorname(ci), CMD_SCI.name); 
+        		if((ci->privilege == PRIV_ADMIN || ci->privilege == PRIV_MASTER) && ci->connected && ci->clientnum != CMD_SENDER) sendf(ci->clientnum, 1, "ris", N_SERVMSG, s);
+        	}
+        }
+        //Variable for ircignore function handler, set ircignore to -1 to disable master/admin/irc notifications
+        else {
+        	defformatstring(toclient)("\f7Sorry, No operators are available currently. \nEmail: \f1%s \f7for more assistance.",contactemail); 
+        	sendf(CMD_SENDER, 1, "ris", N_SERVMSG, toclient);
+        }
     }
     
     SVAR(qserv_version, "");

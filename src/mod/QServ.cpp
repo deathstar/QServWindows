@@ -384,11 +384,10 @@ namespace server {
     
     void QServ::getLocation(clientinfo *ci) {
         
-        char buf[64];
         char *ip = toip(ci->clientnum);
         const char *location;
 
-        if(!strcmp(ip,"127.0.0.1") || !strcmp(buf, ip) || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) location = (char*)"localhost";
+        if(!strcmp(ip,"127.0.0.1") || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) location = (char*)"localhost";
         else location = cgip(ip).c_str();
         
         //format message for console/irc and server
@@ -416,7 +415,7 @@ namespace server {
                 typeconsole = 0;
                 
             //localhost exclusion
-            } else if(!strcmp(ip,"127.0.0.1") || !strcmp(buf, ip) || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) {
+            } else if(!strcmp(ip,"127.0.0.1") || isPartOf(ip,"172.16") || isPartOf(ip,"192.168")) {
                 type = 1;
                 typeconsole = 1;
                 

@@ -14,7 +14,7 @@ So you love QServ and what it can do and you want to help. Well that's great. Th
 done. QServ was written originally 7 years ago when c++ 11/17 weren't a thing. Now, newer compilers will 
 not like some of the old code because of conflicting libraries and such. As always, patches are the only 
 way to fix these issues. The GeoIP handler uses the geolite maxmind database. It is being patched now.
-Another issue is the IRC Bot, it should be threaded properly with detachment and reinitilization. 
+Another issue is the IRC Bot, it should be threaded properly with detachment and reinitilization. If you notice a problem or bug with QServWindows, please report it here.
 
 
 

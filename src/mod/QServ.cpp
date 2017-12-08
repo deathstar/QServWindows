@@ -419,7 +419,7 @@ namespace server {
             
             //cleanup
             geoip_record_copied = true;
-            if(gipr && geoip_record_copied) GeoIPRecord_delete(gipr); 
+            if(geoip_record_copied) GeoIPRecord_delete(gipr); 
             is_unknown_ip = false; 
         }
     }

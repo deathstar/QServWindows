@@ -3,8 +3,7 @@
 Welcome to the QServWindows project page! Thanks to BudSpencer for porting the mod from Unix to Windows. 
 The port had previously uncovered some GeoIP issues but they have all been fixed. GeoIP has been working
 perfectly now. Also, the pban and ban systems have been fixed. For now, the executable is out of date. A
-new executable will be uploaded as soon as all the code is 100% bug free. Thank you for your patience.
-Please report bugs on the [main issues page](https://github.com/deathstar/QServCollect/issues). 
+new executable will be uploaded as soon as all the code is 100% bug free. Report bugs on the [issues page](https://github.com/deathstar/QServCollect/issues). 
 
 # How to run a server
 

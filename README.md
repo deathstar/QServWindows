@@ -10,9 +10,9 @@ perfectly now. Also, the pban and ban systems have been fixed. Please report bug
 2) Unzip QServWindows-master.zip 
 3) Open config/server-init.cfg with a text editor and configure the server
 4) Forward ports 28785 and 28786 using UDP to the internal IP of the computer which QServ is hosted on [(more)](http://quadropolis.us/node/2525)
-5) start QServWindows.exe 
+5) start QServWindows.exe and you're done!
 
-You do not have to restart to change the configuration. Simply add the new modification in config/modifier.cfg, and then join the server, claim admin, and type #reloadconfig. All of the changes will be applied without having to restart the server.
+You do not have to restart to change the configuration. Simply add the new modification in config/modifier.cfg, and then join the server, claim admin, and type #reloadconfig. All of the changes will be applied without having to restart.
 
 # Known issues
 
